@@ -8,6 +8,9 @@
 
 class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
 {
+    const MARK = '✓';
+
+
     /**
      * @return string Syntax mode type
      */
@@ -103,7 +106,7 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
                 $row[$attribute] = $user[$attribute] ?: '';
             }
             foreach ($groups as $group) {
-                $row['memberof'][$group] = in_array($group, $user['grps']) ? 'x' : '';
+                $row['memberof'][$group] = in_array($group, $user['grps']) ? self::MARK : '';
             }
 
             return $row;
