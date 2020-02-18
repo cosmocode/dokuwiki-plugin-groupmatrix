@@ -48,9 +48,9 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
     /**
      * Handle matches of the groupmatrix syntax
      *
-     * @param string       $match   The match of the syntax
-     * @param int          $state   The state of the handler
-     * @param int          $pos     The position in the document
+     * @param string $match The match of the syntax
+     * @param int $state The state of the handler
+     * @param int $pos The position in the document
      * @param Doku_Handler $handler The handler
      *
      * @return array Data for the renderer
@@ -122,9 +122,9 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
     /**
      * Render xhtml output
      *
-     * @param string        $mode     Renderer mode (supported modes: xhtml)
+     * @param string $mode Renderer mode (supported modes: xhtml)
      * @param Doku_Renderer $renderer The renderer
-     * @param array         $data     The data from the handler() function
+     * @param array $data The data from the handler() function
      *
      * @return bool If rendering was successful.
      */
@@ -148,8 +148,7 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
      */
     protected function renderTable($headers, $rows, $className = '')
     {
-        $html = '<table';
-        $html .= $className ? ' class="' . $className . '">' :'>';
+        $html = '<table class="inline ' . $className . '">';
 
         $html .= '<thead>';
         $html .= '<tr>';
@@ -203,7 +202,12 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
     {
         foreach ($row as $item) {
             if (!is_array($item)) {
-                $html .= '<td>' . $item . '</td>';
+                if ($item === self::MARK) {
+                    $html .= '<td class="centeralign">';
+                } else {
+                    $html .= '<td>';
+                }
+                $html .= hsc($item) . '</td>';
             } else {
                 return $this->renderTableCells($item, $html);
             }
