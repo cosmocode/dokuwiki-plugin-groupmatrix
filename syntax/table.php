@@ -75,7 +75,7 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
         }
 
         if (empty($cfg['groups'])) {
-            msg('Missing groups configuration');
+            msg('Missing groups configuration', -1);
             return $data;
         }
 
