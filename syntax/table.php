@@ -82,6 +82,8 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
         $attributes = $this->trimexplode(',', $cfg['attributes']);
         $groups = $this->trimexplode(',', $cfg['groups']);
         $titles = $this->trimexplode(',', $cfg['titles']);
+        if(empty($attributes)) $attributes = ['user'];
+
 
         $groupHeaders = $titles ? array_replace($groups, $titles) : $groups;
         $data['headers'] = array_merge($attributes, $groupHeaders);
