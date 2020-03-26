@@ -79,42 +79,16 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
             return $data;
         }
 
-        $attributes = $this->trimexplode(',', $cfg['attributes']);
-        $groups = $this->trimexplode(',', $cfg['groups']);
+        $data['attributes'] = $this->trimexplode(',', $cfg['attributes']);
+        $data['groups'] = $this->trimexplode(',', $cfg['groups']);
         $titles = $this->trimexplode(',', $cfg['titles']);
-        if(empty($attributes)) $attributes = ['user'];
+        if(empty($data['attributes'])) $data['attributes'] = ['user'];
 
 
-        $groupHeaders = $titles ? array_replace($groups, $titles) : $groups;
-        $data['headers'] = array_merge($attributes, $groupHeaders);
+        $groupHeaders = $titles ? array_replace($data['groups'], $titles) : $data['groups'];
+        $data['headers'] = array_merge($data['attributes'], $groupHeaders);
 
-        /** @var DokuWiki_Auth_Plugin $auth */
-        global $auth;
 
-        $users = $auth->retrieveUsers(0,
-            -1,
-            ['grps' => implode('|', $this->trimexplode(',', $cfg['groups']))]
-        );
-
-        // no results from auth backend, return data with headers only (to create empty table from)
-        if (empty($users)) return $data;
-
-        // convert user data into matrix row: attributes and group membership flags
-        $rows = array_map(function ($user, $username) use ($groups, $attributes) {
-            // special handling of 'user': always use the wiki username from array key
-            $user['user'] = $username;
-
-            foreach ($attributes as $attribute) {
-                $row[$attribute] = $user[$attribute] ?: '';
-            }
-            foreach ($groups as $group) {
-                $row['memberof'][$group] = in_array($group, $user['grps']) ? self::MARK : '';
-            }
-
-            return $row;
-        }, $users, array_keys($users));
-
-        $data['rows'] = $rows;
 
         return $data;
     }
@@ -134,7 +108,38 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
             return false;
         }
 
-        $renderer->doc .= $this->renderTable($data['headers'], $data['rows']);
+        /** @var DokuWiki_Auth_Plugin $auth */
+        global $auth;
+
+        $groups = $data['groups'];
+        $attributes = $data['attributes'];
+
+        $users = $auth->retrieveUsers(0,
+            -1,
+            ['grps' => implode('|', $groups)]
+        );
+
+        // no results from auth backend
+        if (empty($users)) {
+            $rows = [];
+        } else {
+            // convert user data into matrix row: attributes and group membership flags
+            $rows = array_map(function ($user, $username) use ($groups, $attributes) {
+                // special handling of 'user': always use the wiki username from array key
+                $user['user'] = $username;
+
+                foreach ($attributes as $attribute) {
+                    $row[$attribute] = $user[$attribute] ?: '';
+                }
+                foreach ($groups as $group) {
+                    $row['memberof'][$group] = in_array($group, $user['grps']) ? self::MARK : '';
+                }
+
+                return $row;
+            }, $users, array_keys($users));
+        }
+
+        $renderer->doc .= $this->renderTable($data['headers'], $rows);
         return true;
     }
 
