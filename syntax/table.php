@@ -113,22 +113,24 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
         $rows = [];
         foreach ($groups as $group) {
             $users = $auth->retrieveUsers(0, -1, ['grps' => $group]);
-            foreach ($users as $user) {
-                if (!isset($rows[$user['user']])) {
+            foreach ($users as $user => $userinfo) {
+                // not all backends return the user in the info array, fix that here
+                $userinfo['user'] = $user;
+                if (!isset($rows[$user])) {
                     // prepare row of attributes + groups
-                    $rows[$user['user']] = array_merge(
+                    $rows[$user] = array_merge(
                         array_merge(
                             // ensure all atributes are set, even when missing in $user
                             array_fill_keys($attributes, ''),
                             // extract the wanted attributes from $user
-                            array_intersect_key($user, array_flip($attributes))
+                            array_intersect_key($userinfo, array_flip($attributes))
                         ),
                         // add all groups to the row
                         array_fill_keys($groups, '')
                     );
                 }
                 // add group membership
-                $rows[$user['user']][$group] = self::MARK;
+                $rows[$user][$group] = self::MARK;
             }
         }
 
