@@ -125,12 +125,12 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
                             // extract the wanted attributes from $user
                             array_intersect_key($userinfo, array_flip($attributes))
                         ),
-                        // add all groups to the row
-                        array_fill_keys($groups, '')
+                        // add all groups to the row as sub array
+                        ['group__members' => array_fill_keys($groups, '')]
                     );
                 }
                 // add group membership
-                $rows[$user][$group] = self::MARK;
+                $rows[$user]['group__members'][$group] = self::MARK;
             }
         }
 
