@@ -80,15 +80,19 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
         }
 
         $data['attributes'] = $this->trimexplode(',', $cfg['attributes']);
+
+        // localize attribute names in table header
+        $data['attributeHeaders'] = array_map(function ($attr) {
+            return $this->getLang($attr) ?: $attr;
+        }, $data['attributes']);
+
         $data['groups'] = $this->trimexplode(',', $cfg['groups']);
         $titles = $this->trimexplode(',', $cfg['titles']);
         if(empty($data['attributes'])) $data['attributes'] = ['user'];
 
 
         $groupHeaders = $titles ? array_replace($data['groups'], $titles) : $data['groups'];
-        $data['headers'] = array_merge($data['attributes'], $groupHeaders);
-
-
+        $data['headers'] = array_merge($data['attributeHeaders'], $groupHeaders);
 
         return $data;
     }
