@@ -10,7 +10,6 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
 {
     const MARK = '✓';
 
-
     /**
      * @return string Syntax mode type
      */
@@ -88,12 +87,10 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
 
         $data['groups'] = $this->trimexplode(',', $cfg['groups']);
         $titles = $this->trimexplode(',', $cfg['titles']);
-        if(empty($data['attributes'])) $data['attributes'] = ['user'];
-
+        if (empty($data['attributes'])) $data['attributes'] = ['user'];
 
         $groupHeaders = $titles ? array_replace($data['groups'], $titles) : $data['groups'];
         $data['headers'] = array_merge($data['attributeHeaders'], $groupHeaders);
-
         return $data;
     }
 
@@ -118,30 +115,32 @@ class syntax_plugin_groupmatrix_table extends DokuWiki_Syntax_Plugin
         $groups = $data['groups'];
         $attributes = $data['attributes'];
 
-        $users = $auth->retrieveUsers(0,
-            -1,
-            ['grps' => implode('|', $groups)]
-        );
-
-        // no results from auth backend
-        if (empty($users)) {
-            $rows = [];
-        } else {
-            // convert user data into matrix row: attributes and group membership flags
-            $rows = array_map(function ($user, $username) use ($groups, $attributes) {
-                // special handling of 'user': always use the wiki username from array key
-                $user['user'] = $username;
-
-                foreach ($attributes as $attribute) {
-                    $row[$attribute] = $user[$attribute] ?: '';
+        $rows = [];
+        foreach ($groups as $group) {
+            $users = $auth->retrieveUsers(0, -1, ['grps' => $group]);
+            foreach ($users as $user => $userinfo) {
+                // not all backends return the user in the info array, fix that here
+                $userinfo['user'] = $user;
+                if (!isset($rows[$user])) {
+                    // prepare row of attributes + groups
+                    $rows[$user] = array_merge(
+                        array_merge(
+                            // ensure all atributes are set, even when missing in $user
+                            array_fill_keys($attributes, ''),
+                            // extract the wanted attributes from $user
+                            array_intersect_key($userinfo, array_flip($attributes))
+                        ),
+                        // add all groups to the row as sub array
+                        ['group__members' => array_fill_keys($groups, '')]
+                    );
                 }
-                foreach ($groups as $group) {
-                    $row['memberof'][$group] = in_array($group, $user['grps']) ? self::MARK : '';
-                }
-
-                return $row;
-            }, $users, array_keys($users));
+                // add group membership
+                $rows[$user]['group__members'][$group] = self::MARK;
+            }
         }
+
+        // sort by user name
+        ksort($rows);
 
         $renderer->doc .= $this->renderTable($data['headers'], $rows);
         return true;
